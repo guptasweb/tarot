@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-stone-950 text-amber-100;
+  }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -30px) scale(1.05); }
+  66% { transform: translate(-30px, 20px) scale(0.95); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+  50% { transform: translateY(-30px) rotate(8deg); opacity: 0.6; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-slow-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.25; }
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.03; transform: translateX(0); }
+  50% { opacity: 0.08; transform: translateX(20px); }
+}
+
+@keyframes candleGlow {
+  0%, 100% { opacity: 0.4; filter: blur(40px); }
+  50% { opacity: 0.7; filter: blur(60px); }
+}
+
+@keyframes sway {
+  0%, 100% { transform: translateX(0) translateY(0); opacity: 0.6; }
+  25% { transform: translateX(-15px) translateY(-20px); opacity: 0.8; }
+  50% { transform: translateX(12px) translateY(-35px); opacity: 1; }
+  75% { transform: translateX(-10px) translateY(-20px); opacity: 0.8; }
+}
+
+@keyframes gentleRise {
+  0% { transform: translateY(0) scaleY(1); opacity: 0.5; }
+  50% { transform: translateY(-60px) scaleY(1.2); opacity: 0.8; }
+  100% { transform: translateY(0) scaleY(1); opacity: 0.5; }
+}
+
+@keyframes rayPulse {
+  0%, 100% { opacity: 0.15; transform: scaleX(1) translateX(0); }
+  50% { opacity: 0.35; transform: scaleX(1.2) translateX(10px); }
+}
+
+@keyframes windSway {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(50px) rotate(2deg); }
+  50% { transform: translateX(-40px) rotate(-1.5deg); }
+  75% { transform: translateX(30px) rotate(1deg); }
+}

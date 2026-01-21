@@ -1,0 +1,418 @@
+// Prisma schema for Tarot Reading Application
+// Session-based credits system (NO user accounts)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// GUEST SESSIONS (Main entity - replaces users)
+// ============================================================================
+
+model GuestSession {
+  id                    String   @id @default(uuid()) @db.Uuid
+  sessionToken          String   @unique @db.VarChar(255)
+  email                 String?  @db.VarChar(255)
+  
+  // Credits (session-specific)
+  creditsBalance        Int      @default(0) @db.Integer
+  totalCreditsPurchased Int      @default(0) @db.Integer
+  totalCreditsSpent     Int      @default(0) @db.Integer
+  
+  // Stripe payment tracking
+  stripeCustomerId      String?  @db.VarChar(255)
+  
+  // Access & Expiry
+  expiresAt             DateTime @db.Timestamp(6)
+  lastAccessedAt        DateTime @default(now()) @db.Timestamp(6)
+  
+  // Metadata
+  createdAt             DateTime @default(now()) @db.Timestamp(6)
+  updatedAt             DateTime @updatedAt @db.Timestamp(6)
+  
+  // Relations
+  creditTransactions    CreditTransaction[]
+  readingSessions       ReadingSession[]
+  transcripts           Transcript[]
+  sessionEvents         SessionEvent[]
+  feedback              ReadingFeedback[]
+  
+  @@index([sessionToken])
+  @@index([expiresAt])
+  @@index([email])
+  @@map("guest_sessions")
+}
+
+// ============================================================================
+// CREDIT PACKAGES (What users can purchase)
+// ============================================================================
+
+model CreditPackage {
+  id                  String   @id @default(uuid()) @db.Uuid
+  name                String   @db.VarChar(100)
+  credits             Int      @db.Integer
+  priceCents          Int      @db.Integer
+  
+  // Stripe integration
+  stripePriceId       String?  @unique @db.VarChar(255)
+  
+  // Display & availability
+  description         String?  @db.Text
+  isActive            Boolean  @default(true)
+  displayOrder        Int      @default(0) @db.Integer
+  
+  // Special offers
+  isPromotional       Boolean  @default(false)
+  discountPercentage  Int      @default(0) @db.Integer
+  validFrom           DateTime? @db.Timestamp(6)
+  validUntil          DateTime? @db.Timestamp(6)
+  
+  // Metadata
+  createdAt           DateTime @default(now()) @db.Timestamp(6)
+  updatedAt           DateTime @updatedAt @db.Timestamp(6)
+  
+  @@index([isActive, displayOrder])
+  @@map("credit_packages")
+}
+
+// ============================================================================
+// CREDIT TRANSACTIONS (Purchase & Usage tracking)
+// ============================================================================
+
+model CreditTransaction {
+  id                      String   @id @default(uuid()) @db.Uuid
+  guestSessionId          String   @db.Uuid
+  guestSession            GuestSession @relation(fields: [guestSessionId], references: [id], onDelete: Cascade)
+  
+  // Transaction details
+  type                    String   @db.VarChar(20) // purchase, usage, refund, admin_grant, expiry
+  amount                  Int      @db.Integer // Positive for credits added, negative for used
+  balanceAfter            Int      @db.Integer
+  
+  // Payment info (for purchases)
+  priceCents              Int?     @db.Integer
+  stripePaymentIntentId   String?  @db.VarChar(255)
+  stripeCheckoutSessionId String?  @db.VarChar(255)
+  paymentStatus           String?  @db.VarChar(20) // pending, succeeded, failed, refunded
+  
+  // Usage info (for reading usage)
+  readingSessionId        String?  @db.Uuid
+  readingSession          ReadingSession? @relation(fields: [readingSessionId], references: [id], onDelete: SetNull)
+  
+  // Refund info
+  refundReason            String?  @db.Text
+  refundedTransactionId   String?  @db.Uuid
+  refundedTransaction     CreditTransaction? @relation("TransactionRefunds", fields: [refundedTransactionId], references: [id])
+  refundingTransactions   CreditTransaction[] @relation("TransactionRefunds")
+  
+  // Metadata
+  metadata                Json?    @db.JsonB
+  
+  createdAt               DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([guestSessionId, createdAt(sort: Desc)])
+  @@index([type])
+  @@index([stripePaymentIntentId])
+  @@index([stripeCheckoutSessionId])
+  @@index([readingSessionId])
+  @@map("credit_transactions")
+}
+
+// ============================================================================
+// READING TYPES & DEFINITIONS
+// ============================================================================
+
+model ReadingType {
+  id              String   @id @default(uuid()) @db.Uuid
+  slug            String   @unique @db.VarChar(50)
+  name            String   @db.VarChar(100)
+  description     String   @db.Text
+  
+  // Pricing
+  creditsCost     Int      @db.Integer
+  
+  // Configuration
+  config          Json     @default("{}") @db.JsonB
+  
+  // Display
+  tagline         String?  @db.VarChar(255)
+  features        Json?    @db.JsonB
+  bestFor         String?  @db.Text
+  displayOrder    Int      @default(0) @db.Integer
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  
+  // Metadata
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @updatedAt @db.Timestamp(6)
+  
+  // Relations
+  readingSessions ReadingSession[]
+  
+  @@index([isActive, displayOrder])
+  @@index([slug])
+  @@map("reading_types")
+}
+
+// ============================================================================
+// READING SESSIONS (Individual tarot readings)
+// ============================================================================
+
+model ReadingSession {
+  id                String   @id @default(uuid()) @db.Uuid
+  guestSessionId    String   @db.Uuid
+  guestSession      GuestSession @relation(fields: [guestSessionId], references: [id], onDelete: Cascade)
+  readingTypeId     String   @db.Uuid
+  readingType       ReadingType @relation(fields: [readingTypeId], references: [id])
+  
+  // Session details
+  readingTypeSlug   String   @db.VarChar(50)
+  creditsUsed       Int      @db.Integer
+  
+  // Status tracking
+  status            String   @default("active") @db.VarChar(20) // active, completed, expired, cancelled
+  currentPhase      String   @default("init") @db.VarChar(50) // init, question, draw, interpret, chat
+  
+  // Question
+  originalQuestion  String?  @db.Text
+  refinedQuestion   String?  @db.Text
+  questionContext   Json?    @db.JsonB
+  
+  // Cards drawn
+  spreadType        String?  @db.VarChar(50)
+  cardsDrawn        Json?    @db.JsonB
+  
+  // User insights
+  userInsights      Json     @default("[]") @db.JsonB
+  
+  // Agent state (for LangGraph persistence)
+  agentState        Json?    @db.JsonB
+  
+  // Timing
+  startedAt         DateTime @default(now()) @db.Timestamp(6)
+  expiresAt         DateTime @db.Timestamp(6)
+  lastActivityAt    DateTime @default(now()) @db.Timestamp(6)
+  completedAt       DateTime? @db.Timestamp(6)
+  
+  // Export tracking
+  transcriptGenerated Boolean @default(false)
+  transcriptUrl      String?  @db.VarChar(500)
+  transcriptGeneratedAt DateTime? @db.Timestamp(6)
+  
+  // Metadata
+  metadata          Json?    @db.JsonB
+  
+  createdAt         DateTime @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime @updatedAt @db.Timestamp(6)
+  
+  // Relations
+  creditTransactions CreditTransaction[]
+  messages          Message[]
+  transcripts       Transcript[]
+  sessionEvents     SessionEvent[]
+  feedback          ReadingFeedback[]
+  
+  @@index([guestSessionId, createdAt(sort: Desc)])
+  @@index([status, expiresAt])
+  @@index([readingTypeSlug])
+  @@index([expiresAt])
+  @@map("reading_sessions")
+}
+
+// ============================================================================
+// MESSAGES (Chat within reading sessions)
+// ============================================================================
+
+model Message {
+  id              String   @id @default(uuid()) @db.Uuid
+  sessionId       String   @db.Uuid
+  session         ReadingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Message content
+  role            String   @db.VarChar(20) // user, assistant, system, tool
+  content         String   @db.Text
+  contentType     String   @default("text") @db.VarChar(20) // text, markdown, card_reveal
+  
+  // Metadata
+  metadata        Json?    @db.JsonB
+  
+  // AI tracking
+  modelUsed       String?  @db.VarChar(50)
+  tokensPrompt    Int?     @db.Integer
+  tokensCompletion Int?    @db.Integer
+  
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([sessionId, createdAt(sort: Asc)])
+  @@index([role])
+  @@map("messages")
+}
+
+// ============================================================================
+// CARDS & SPREADS (Reference Data)
+// ============================================================================
+
+model TarotCard {
+  id                String   @id @default(uuid()) @db.Uuid
+  name              String   @unique @db.VarChar(100)
+  arcana            String   @db.VarChar(20) // major, minor
+  suit              String?  @db.VarChar(20) // wands, cups, swords, pentacles
+  rank              String?  @db.VarChar(20) // ace, 2-10, page, knight, queen, king
+  number            Int?     @db.Integer
+  
+  // Assets
+  imageUrlUpright   String?  @db.VarChar(500)
+  imageUrlReversed  String?  @db.VarChar(500)
+  
+  // Basic meanings
+  keywordsUpright   Json?    @db.JsonB
+  keywordsReversed  Json?    @db.JsonB
+  summaryUpright    String?  @db.Text
+  summaryReversed   String?  @db.Text
+  
+  // Associations
+  element           String?  @db.VarChar(20)
+  astrologicalSign  String?  @db.VarChar(50)
+  numerology        Int?     @db.Integer
+  
+  createdAt         DateTime @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime @updatedAt @db.Timestamp(6)
+  
+  @@index([arcana])
+  @@index([suit])
+  @@map("tarot_cards")
+}
+
+model SpreadType {
+  id            String   @id @default(uuid()) @db.Uuid
+  slug          String   @unique @db.VarChar(50)
+  name          String   @db.VarChar(100)
+  description   String?  @db.Text
+  
+  // Structure
+  numCards      Int      @db.Integer
+  positions     Json     @db.JsonB
+  
+  // Usage
+  difficulty    String?  @db.VarChar(20) // beginner, intermediate, advanced
+  bestFor       Json?    @db.JsonB
+  
+  // Display
+  isActive      Boolean  @default(true)
+  displayOrder  Int      @default(0) @db.Integer
+  
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([isActive, displayOrder])
+  @@map("spread_types")
+}
+
+// ============================================================================
+// TRANSCRIPTS (Exported readings)
+// ============================================================================
+
+model Transcript {
+  id                  String   @id @default(uuid()) @db.Uuid
+  sessionId           String?  @db.Uuid
+  session             ReadingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  guestSessionId      String   @db.Uuid
+  guestSession        GuestSession @relation(fields: [guestSessionId], references: [id], onDelete: Cascade)
+  
+  // File details
+  format              String   @db.VarChar(20) // markdown, html, json, pdf
+  fileUrl             String   @db.VarChar(500)
+  fileSizeBytes       Int?     @db.Integer
+  
+  // Export configuration
+  includeMetadata     Boolean  @default(true)
+  includeTimestamps   Boolean  @default(false)
+  styleTemplate       String?  @db.VarChar(50)
+  
+  // Access control
+  downloadCount       Int      @default(0) @db.Integer
+  lastDownloadedAt    DateTime? @db.Timestamp(6)
+  
+  // Expiry
+  expiresAt           DateTime @db.Timestamp(6)
+  
+  createdAt           DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([guestSessionId, createdAt(sort: Desc)])
+  @@index([sessionId])
+  @@index([expiresAt])
+  @@map("transcripts")
+}
+
+// ============================================================================
+// ANALYTICS & TRACKING
+// ============================================================================
+
+model SessionEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  sessionId       String   @db.Uuid
+  session         ReadingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  guestSessionId  String?  @db.Uuid
+  guestSession    GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+  
+  // Event details
+  eventType       String   @db.VarChar(50)
+  eventData       Json?    @db.JsonB
+  
+  // Context
+  userAgent       String?  @db.Text
+  ipAddress       String?  @db.Inet
+  
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([sessionId, createdAt(sort: Asc)])
+  @@index([eventType, createdAt(sort: Desc)])
+  @@index([guestSessionId, createdAt(sort: Desc)])
+  @@map("session_events")
+}
+
+model ReadingFeedback {
+  id                  String   @id @default(uuid()) @db.Uuid
+  sessionId           String   @db.Uuid
+  session             ReadingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  guestSessionId      String?  @db.Uuid
+  guestSession        GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+  
+  // Ratings
+  overallRating       Int?     @db.Integer
+  accuracyRating      Int?     @db.Integer
+  helpfulnessRating    Int?     @db.Integer
+  
+  // Qualitative feedback
+  whatWorkedWell      String?  @db.Text
+  whatCouldImprove    String?  @db.Text
+  wouldUseAgain       Boolean? @db.Boolean
+  
+  // Follow-up
+  outcomeReported     Boolean  @default(false)
+  outcomeNotes         String?  @db.Text
+  outcomeReportedAt    DateTime? @db.Timestamp(6)
+  
+  createdAt           DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([sessionId])
+  @@index([overallRating, createdAt(sort: Desc)])
+  @@map("reading_feedback")
+}
+
+// ============================================================================
+// SYSTEM CONFIGURATION
+// ============================================================================
+
+model SystemConfig {
+  key         String   @id @db.VarChar(100)
+  value       Json     @db.JsonB
+  description String?  @db.Text
+  updatedAt   DateTime @updatedAt @db.Timestamp(6)
+  
+  @@map("system_config")
+}
