@@ -37,3 +37,23 @@ next-env.d.ts
 
 # prisma
 /backend/prisma/migrations/
+
+# RAG Data - too large for git
+/backend/lib/rag/data/raw/**
+!/backend/lib/rag/data/raw/.gitkeep
+!/backend/lib/rag/data/raw/README.md
+
+/backend/lib/rag/data/processed/**
+!/backend/lib/rag/data/processed/.gitkeep
+
+# Nested RAG data path
+/backend/lib/rag/src/lib/rag/data/raw/**
+!/backend/lib/rag/src/lib/rag/data/raw/.gitkeep
+!/backend/lib/rag/src/lib/rag/data/raw/README.md
+
+/backend/lib/rag/src/lib/rag/data/processed/**
+!/backend/lib/rag/src/lib/rag/data/processed/.gitkeep
+
+# Keep examples
+!/backend/lib/rag/data/examples/**
+!/backend/lib/rag/src/lib/rag/data/examples/**
