@@ -32,10 +32,11 @@ export default function BackgroundEffects({ mousePos }: BackgroundEffectsProps) 
       return { x, height, startY, thickness, isReverse, intensity }
     })
 
-    // Generate network nodes
+    // Generate network nodes (radius for circles; path d must use numbers, not %)
     const nodes = Array.from({ length: 50 }, () => ({
       x: rng() * 100,
-      y: rng() * 100
+      y: rng() * 100,
+      radius: 0.4 + rng() * 0.3
     }))
 
     // Generate connections between nodes
@@ -244,7 +245,7 @@ export default function BackgroundEffects({ mousePos }: BackgroundEffectsProps) 
       </div>
 
       {/* Vertical glowing lines with curved network and circles */}
-      <svg className="fixed inset-0 w-full h-full pointer-events-none" style={{ mixBlendMode: 'screen' }}>
+      <svg className="fixed inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" style={{ mixBlendMode: 'screen' }}>
         <defs>
           <linearGradient id="verticalGlow" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="rgba(217, 119, 6, 0.9)" />
@@ -276,10 +277,10 @@ export default function BackgroundEffects({ mousePos }: BackgroundEffectsProps) 
         {patternData.verticalLines.map((line, i) => (
           <line
             key={`vertical-${i}`}
-            x1={`${line.x}%`}
-            y1={`${line.startY}%`}
-            x2={`${line.x}%`}
-            y2={`${line.startY + line.height}%`}
+            x1={line.x}
+            y1={line.startY}
+            x2={line.x}
+            y2={line.startY + line.height}
             stroke={line.isReverse ? "url(#verticalGlowReverse)" : "url(#verticalGlow)"}
             strokeWidth={line.thickness}
             filter="url(#glow)"
@@ -293,7 +294,7 @@ export default function BackgroundEffects({ mousePos }: BackgroundEffectsProps) 
           {patternData.connections.map((conn, i) => (
             <path
               key={`curve-${i}`}
-              d={`M ${conn.from.x}% ${conn.from.y}% Q ${conn.midX}% ${conn.midY}%, ${conn.to.x}% ${conn.to.y}%`}
+              d={`M ${conn.from.x} ${conn.from.y} Q ${conn.midX} ${conn.midY} ${conn.to.x} ${conn.to.y}`}
               fill="none"
               stroke="rgba(217, 119, 6, 0.25)"
               strokeWidth="0.4"
@@ -305,8 +306,8 @@ export default function BackgroundEffects({ mousePos }: BackgroundEffectsProps) 
           {patternData.nodes.map((node, i) => (
             <circle
               key={`node-${i}`}
-              cx={`${node.x}%`}
-              cy={`${node.y}%`}
+              cx={node.x}
+              cy={node.y}
               r={node.radius}
               fill="rgba(217, 119, 6, 0.35)"
               filter="url(#softGlow)"
@@ -317,7 +318,7 @@ export default function BackgroundEffects({ mousePos }: BackgroundEffectsProps) 
           {patternData.organicCurves.map((curve, i) => (
             <path
               key={`organic-${i}`}
-              d={`M ${curve.startX}% ${curve.startY}% C ${curve.cp1X}% ${curve.cp1Y}%, ${curve.cp2X}% ${curve.cp2Y}%, ${curve.endX}% ${curve.endY}%`}
+              d={`M ${curve.startX} ${curve.startY} C ${curve.cp1X} ${curve.cp1Y} ${curve.cp2X} ${curve.cp2Y} ${curve.endX} ${curve.endY}`}
               fill="none"
               stroke="rgba(217, 119, 6, 0.2)"
               strokeWidth="0.3"

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tarot Reading Flow - Wireframe</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes shuffle {
+      0%, 100% { transform: rotate(0deg) translateY(0); }
+      50% { transform: rotate(5deg) translateY(-10px); }
+    }
+    .animate-shuffle { animation: shuffle 2s infinite; }
+  </style>
+</head>
+<body class="min-h-screen p-6" style="background: linear-gradient(to bottom, #0d0806 0%, #1a0f0a 20%, #120a06 40%, #1f1108 60%, #0a0604 80%, #030201 100%);">
+  <!-- Icon SVGs (Lucide-style, hidden) -->
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-moon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-star" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-sun" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-sparkles" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-arrow-right" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-arrow-left" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-message" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-clock" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-target" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-brain" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-heart" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg" id="icon-wand" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5"/><path d="m3 21 3-3M3 18l3 3M12 3l3 3M12 9l3-3"/></svg>
+
+  <script>
+    let currentStage = 'landing';
+
+    function goTo(stage) {
+      currentStage = stage;
+      render();
+    }
+
+    function render() {
+      const app = document.getElementById('app');
+      const stages = {
+        landing: document.getElementById('stage-landing'),
+        question: document.getElementById('stage-question'),
+        spread: document.getElementById('stage-spread'),
+        framework: document.getElementById('stage-framework'),
+        drawing: document.getElementById('stage-drawing'),
+        cards: document.getElementById('stage-cards'),
+        interpretation: document.getElementById('stage-interpretation'),
+        chat: document.getElementById('stage-chat')
+      };
+
+      Object.keys(stages).forEach(s => {
+        const el = stages[s];
+        if (el) el.style.display = currentStage === s ? 'block' : 'none';
+      });
+
+      const header = document.getElementById('stage-header');
+      header.style.display = currentStage === 'landing' ? 'none' : 'block';
+
+      const footer = document.getElementById('stage-footer');
+      footer.style.display = currentStage === 'landing' ? 'block' : 'none';
+
+      const stageLabels = {
+        question: 'Question',
+        spread: 'Spread Selection',
+        framework: 'Reading Style',
+        drawing: 'Drawing Cards',
+        cards: 'Your Reading',
+        interpretation: 'Full Interpretation',
+        chat: 'AI Chat'
+      };
+      const labelEl = document.getElementById('stage-label');
+      if (labelEl) labelEl.textContent = stageLabels[currentStage] || '';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      render();
+    });
+  </script>
+
+  <div class="max-w-6xl mx-auto">
+  <!-- Header (hidden on landing) -->
+  <div id="stage-header" class="max-w-6xl mx-auto mb-6" style="display: none;">
+    <div class="flex items-center justify-between">
+      <button type="button" onclick="goTo('landing')" class="flex items-center gap-2 text-amber-200/70 hover:text-white transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        <span class="font-bold text-xl">AI Tarot</span>
+      </button>
+      <div id="stage-label" class="flex items-center gap-2 text-amber-200/70 text-sm"></div>
+    </div>
+  </div>
+
+  <!-- Stage: Landing -->
+  <div id="stage-landing" class="text-center space-y-8">
+    <div class="space-y-4 mb-12">
+      <div class="flex items-center justify-center gap-3 mb-4">
+        <svg class="w-12 h-12 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        <h1 class="text-5xl font-bold text-white">AI Tarot Readings</h1>
+        <svg class="w-12 h-12 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+      </div>
+      <p class="text-2xl text-amber-200">Ancient wisdom meets modern AI interpretation</p>
+      <p class="text-lg text-amber-300/80">Get personalized insights with authentic tarot knowledge</p>
+    </div>
+
+    <button type="button" onclick="goTo('question')" class="px-12 py-8 text-2xl bg-gradient-to-r from-amber-600 via-orange-500 to-rose-600 hover:from-amber-700 hover:to-rose-700 shadow-2xl rounded-lg font-semibold text-white flex items-center justify-center gap-3 mx-auto">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+      Start Your Reading
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
+      <div onclick="goTo('drawing')" class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6 text-center cursor-pointer hover:bg-black/50 transition-all hover:scale-105">
+        <svg class="mx-auto mb-3 w-8 h-8 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        <h3 class="text-xl font-semibold text-white mb-2">Quick Insight</h3>
+        <p class="text-amber-200/70 text-sm">1 card - 2 min</p>
+      </div>
+      <div onclick="goTo('question')" class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6 text-center cursor-pointer hover:bg-black/50 transition-all hover:scale-105">
+        <svg class="mx-auto mb-3 w-8 h-8 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+        <h3 class="text-xl font-semibold text-white mb-2">Classic Spread</h3>
+        <p class="text-amber-200/70 text-sm">3 cards - 5 min</p>
+      </div>
+      <div onclick="goTo('question')" class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6 text-center cursor-pointer hover:bg-black/50 transition-all hover:scale-105">
+        <svg class="mx-auto mb-3 w-8 h-8 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <h3 class="text-xl font-semibold text-white mb-2">Deep Insight</h3>
+        <p class="text-amber-200/70 text-sm">10 cards - 15 min</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 max-w-4xl mx-auto text-left">
+      <div class="space-y-2">
+        <svg class="w-8 h-8 text-amber-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/></svg>
+        <h4 class="text-lg font-semibold text-white">RAG-Powered</h4>
+        <p class="text-amber-200/70 text-sm">Authentic traditional meanings from comprehensive knowledge base</p>
+      </div>
+      <div class="space-y-2">
+        <svg class="w-8 h-8 text-amber-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <h4 class="text-lg font-semibold text-white">AI Chat</h4>
+        <p class="text-amber-200/70 text-sm">Ask follow-up questions and explore deeper meanings</p>
+      </div>
+      <div class="space-y-2">
+        <svg class="w-8 h-8 text-amber-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        <h4 class="text-lg font-semibold text-white">Personal Guidance</h4>
+        <p class="text-amber-200/70 text-sm">Four frameworks tailored to your needs</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage: Question -->
+  <div id="stage-question" class="max-w-3xl mx-auto space-y-6" style="display: none;">
+    <div class="flex items-center justify-between mb-8">
+      <button type="button" onclick="goTo('landing')" class="text-amber-200/70 hover:text-white flex items-center gap-2 bg-transparent border-0 cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back
+      </button>
+      <span class="text-amber-200/70">Step 1 of 3</span>
+    </div>
+
+    <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-8">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-white mb-2">What would you like guidance on?</h2>
+        <p class="text-amber-200/70">Focus on your question as you type</p>
+      </div>
+      <textarea class="w-full p-4 rounded-lg bg-black/50 text-white placeholder-purple-200 border border-amber-500/30 text-lg" placeholder="Type your question here..." rows="4"></textarea>
+      <div class="mt-6 p-4 bg-amber-600/20 rounded-lg">
+        <h3 class="text-white font-semibold mb-2 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+          Tips for Better Readings
+        </h3>
+        <ul class="text-amber-200/70 text-sm space-y-1">
+          <li>Be specific but open-ended</li>
+          <li>Focus on "how" or "what" rather than "yes/no"</li>
+          <li>Ask about your role, not others' actions</li>
+        </ul>
+      </div>
+      <div class="mt-6">
+        <h3 class="text-white font-semibold mb-3">Popular Questions:</h3>
+        <div class="space-y-2">
+          <div class="p-3 bg-black/40 rounded-lg cursor-pointer hover:bg-black/50 text-amber-100/80 text-sm">What do I need to know about my career path?</div>
+          <div class="p-3 bg-black/40 rounded-lg cursor-pointer hover:bg-black/50 text-amber-100/80 text-sm">How can I improve my relationships?</div>
+          <div class="p-3 bg-black/40 rounded-lg cursor-pointer hover:bg-black/50 text-amber-100/80 text-sm">What is blocking my personal growth?</div>
+          <div class="p-3 bg-black/40 rounded-lg cursor-pointer hover:bg-black/50 text-amber-100/80 text-sm">What should I focus on this month?</div>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" onclick="goTo('spread')" class="w-full py-6 text-lg bg-gradient-to-r from-amber-600 via-orange-500 to-rose-600 hover:from-purple-600 hover:to-pink-600 rounded-lg font-semibold text-white flex items-center justify-center gap-2">
+      Continue
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <!-- Stage: Spread -->
+  <div id="stage-spread" class="max-w-5xl mx-auto space-y-6" style="display: none;">
+    <div class="flex items-center justify-between mb-8">
+      <button type="button" onclick="goTo('question')" class="text-amber-200/70 hover:text-white flex items-center gap-2 bg-transparent border-0 cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back
+      </button>
+      <span class="text-amber-200/70">Step 2 of 3</span>
+    </div>
+
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-white mb-2">Choose Your Reading Spread</h2>
+      <p class="text-amber-200/70">Select the layout that fits your question</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6 cursor-pointer hover:bg-black/50 hover:scale-105 transition-all">
+        <div class="text-center mb-4">
+          <h3 class="text-2xl font-bold text-white mb-2">Quick Insight</h3>
+          <div class="flex justify-center mb-3">
+            <div class="w-20 h-28 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg shadow-lg flex items-center justify-center">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+            </div>
+          </div>
+          <p class="text-amber-200/70 mb-2">1 card - 2-3 minutes</p>
+        </div>
+        <div class="space-y-2 text-sm text-amber-100/80">
+          <p>Simple & quick daily guidance</p>
+          <p>Perfect for yes/no questions</p>
+          <p>Clear, focused insight</p>
+        </div>
+      </div>
+
+      <div class="bg-black/40 backdrop-blur border-2 border-pink-400 rounded-xl p-6 cursor-pointer hover:bg-black/50 hover:scale-105 transition-all relative">
+        <div class="absolute top-2 right-2 bg-pink-500 text-white text-xs px-2 py-1 rounded-full">Popular</div>
+        <div class="text-center mb-4">
+          <h3 class="text-2xl font-bold text-white mb-2">Past-Present-Future</h3>
+          <div class="flex justify-center gap-2 mb-3">
+            <div class="w-16 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg shadow-lg flex items-center justify-center"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg></div>
+            <div class="w-16 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg shadow-lg flex items-center justify-center"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg></div>
+            <div class="w-16 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg shadow-lg flex items-center justify-center"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg></div>
+          </div>
+          <p class="text-amber-200/70 mb-2">3 cards - 5-7 minutes</p>
+        </div>
+        <div class="space-y-2 text-sm text-amber-100/80">
+          <p>Clear timeline perspective</p>
+          <p>Understand progression</p>
+          <p>See the bigger picture</p>
+        </div>
+      </div>
+
+      <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6 cursor-pointer hover:bg-black/50 hover:scale-105 transition-all">
+        <div class="text-center mb-4">
+          <h3 class="text-2xl font-bold text-white mb-2">Relationship Matrix</h3>
+          <div class="flex justify-center mb-3">
+            <div class="grid grid-cols-3 gap-1 w-fit">
+              <div class="w-10 h-14 bg-gradient-to-br from-pink-400 to-red-500 rounded shadow-lg"></div>
+              <div class="w-10 h-14 bg-gradient-to-br from-pink-400 to-red-500 rounded shadow-lg"></div>
+              <div class="w-10 h-14 bg-gradient-to-br from-pink-400 to-red-500 rounded shadow-lg"></div>
+              <div class="w-10 h-14 bg-gradient-to-br from-pink-400 to-red-500 rounded shadow-lg"></div>
+              <div class="w-10 h-14 bg-gradient-to-br from-pink-400 to-red-500 rounded shadow-lg"></div>
+              <div class="w-10 h-14 bg-gradient-to-br from-pink-400 to-red-500 rounded shadow-lg"></div>
+              <div class="w-10 h-14 bg-gradient-to-br from-pink-400 to-red-500 rounded shadow-lg"></div>
+              <div class="w-10 h-14 bg-gradient-to-br from-pink-400 to-red-500 rounded shadow-lg"></div>
+              <div class="w-10 h-14 bg-gradient-to-br from-pink-400 to-red-500 rounded shadow-lg"></div>
+            </div>
+          </div>
+          <p class="text-amber-200/70 mb-2">9 cards - 10-15 minutes</p>
+        </div>
+        <div class="space-y-2 text-sm text-amber-100/80">
+          <p>Deep connection dynamics</p>
+          <p>Both perspectives shown</p>
+          <p>Relationship patterns</p>
+        </div>
+      </div>
+
+      <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6 cursor-pointer hover:bg-black/50 hover:scale-105 transition-all">
+        <div class="text-center mb-4">
+          <h3 class="text-2xl font-bold text-white mb-2">Celtic Cross</h3>
+          <div class="flex justify-center mb-3">
+            <div class="relative w-32 h-32">
+              <div class="absolute top-8 left-12 w-8 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded shadow-lg"></div>
+              <div class="absolute top-8 left-12 w-8 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded shadow-lg rotate-90"></div>
+              <div class="absolute top-0 left-12 w-8 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded shadow-lg"></div>
+              <div class="absolute top-16 left-12 w-8 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded shadow-lg"></div>
+              <div class="absolute top-8 left-4 w-8 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded shadow-lg"></div>
+              <div class="absolute top-8 left-20 w-8 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded shadow-lg"></div>
+            </div>
+          </div>
+          <p class="text-amber-200/70 mb-2">10 cards - 15-20 minutes</p>
+        </div>
+        <div class="space-y-2 text-sm text-amber-100/80">
+          <p>Comprehensive life analysis</p>
+          <p>Traditional & powerful</p>
+          <p>Deep insights revealed</p>
+        </div>
+      </div>
+    </div>
+
+    <details class="mt-6">
+      <summary class="cursor-pointer text-amber-200/70 hover:text-white flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5"/><path d="m3 21 3-3M3 18l3 3M12 3l3 3M12 9l3-3"/></svg>
+        Advanced Options (Custom Spreads)
+      </summary>
+      <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-4 mt-2">
+        <p class="text-amber-200/70 text-sm">Custom spread builder coming soon...</p>
+      </div>
+    </details>
+
+    <button type="button" onclick="goTo('framework')" class="w-full py-6 text-lg bg-gradient-to-r from-amber-600 via-orange-500 to-rose-600 hover:from-purple-600 hover:to-pink-600 rounded-lg font-semibold text-white flex items-center justify-center gap-2">
+      Continue
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <!-- Stage: Framework -->
+  <div id="stage-framework" class="max-w-3xl mx-auto space-y-6" style="display: none;">
+    <div class="flex items-center justify-between mb-8">
+      <button type="button" onclick="goTo('spread')" class="text-amber-200/70 hover:text-white flex items-center gap-2 bg-transparent border-0 cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back
+      </button>
+      <span class="text-amber-200/70">Step 3 of 3</span>
+    </div>
+
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-white mb-2">How would you like your reading?</h2>
+      <p class="text-amber-200/70">Choose the interpretation style that resonates with you</p>
+    </div>
+
+    <div class="space-y-4">
+      <div class="bg-black/40 backdrop-blur border-2 border-blue-400 rounded-xl p-6 cursor-pointer hover:bg-black/50 transition-all">
+        <div class="flex items-start gap-4">
+          <svg class="w-8 h-8 text-blue-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          <div class="flex-1">
+            <h3 class="text-2xl font-bold text-white mb-2">Practical</h3>
+            <p class="text-amber-100/80 mb-3">Actionable advice for real-world decisions</p>
+            <p class="text-amber-200/70 text-sm italic">"What specific steps can I take?"</p>
+            <div class="mt-3 space-y-1 text-sm text-amber-100/80">
+              <p>Clear action items</p>
+              <p>Real-world applications</p>
+              <p>Concrete guidance</p>
+            </div>
+          </div>
+          <div class="bg-blue-500 text-white text-xs px-3 py-1 rounded-full">Selected</div>
+        </div>
+      </div>
+
+      <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6 cursor-pointer hover:bg-black/50 transition-all">
+        <div class="flex items-start gap-4">
+          <svg class="w-8 h-8 text-amber-300/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <div class="flex-1">
+            <h3 class="text-2xl font-bold text-white mb-2">Predictive</h3>
+            <p class="text-amber-100/80 mb-3">Insights about likely outcomes & timing</p>
+            <p class="text-amber-200/70 text-sm italic">"What might happen based on my current path?"</p>
+            <div class="mt-3 space-y-1 text-sm text-amber-100/80">
+              <p>Future possibilities</p>
+              <p>Timing indicators</p>
+              <p>Outcome awareness</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6 cursor-pointer hover:bg-black/50 transition-all">
+        <div class="flex items-start gap-4">
+          <svg class="w-8 h-8 text-pink-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/></svg>
+          <div class="flex-1">
+            <h3 class="text-2xl font-bold text-white mb-2">Psychological</h3>
+            <p class="text-amber-100/80 mb-3">Inner patterns, shadow work & personal growth</p>
+            <p class="text-amber-200/70 text-sm italic">"What unconscious patterns am I exploring?"</p>
+            <div class="mt-3 space-y-1 text-sm text-amber-100/80">
+              <p>Jungian archetypes</p>
+              <p>Shadow integration</p>
+              <p>Deep self-discovery</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6 cursor-pointer hover:bg-black/50 transition-all">
+        <div class="flex items-start gap-4">
+          <svg class="w-8 h-8 text-yellow-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          <div class="flex-1">
+            <h3 class="text-2xl font-bold text-white mb-2">Spiritual</h3>
+            <p class="text-amber-100/80 mb-3">Soul lessons & divine guidance</p>
+            <p class="text-amber-200/70 text-sm italic">"What is my soul's message for me?"</p>
+            <div class="mt-3 space-y-1 text-sm text-amber-100/80">
+              <p>Higher purpose</p>
+              <p>Spiritual evolution</p>
+              <p>Sacred meaning</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-4 bg-amber-600/20 rounded-lg">
+      <p class="text-amber-200/70 text-sm">
+        <strong>Not sure?</strong> Start with <strong>Practical</strong> for everyday questions or <strong>Psychological</strong> for self-discovery
+      </p>
+    </div>
+
+    <button type="button" onclick="goTo('drawing')" class="w-full py-6 text-lg bg-gradient-to-r from-amber-600 via-orange-500 to-rose-600 hover:from-purple-600 hover:to-pink-600 rounded-lg font-semibold text-white flex items-center justify-center gap-2">
+      Begin Reading
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <!-- Stage: Drawing -->
+  <div id="stage-drawing" class="max-w-3xl mx-auto" style="display: none;">
+    <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-12 text-center">
+      <div class="mb-8">
+        <svg class="mx-auto w-16 h-16 text-amber-300/80 mb-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        <h2 class="text-3xl font-bold text-white mb-4">Connecting to your reading</h2>
+      </div>
+
+      <div class="flex justify-center mb-8">
+        <div class="relative w-48 h-64">
+          <div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-indigo-800 rounded-lg shadow-2xl animate-shuffle" style="transform: rotate(0deg) translateY(0);"></div>
+          <div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-indigo-800 rounded-lg shadow-2xl animate-shuffle" style="animation-delay: 0.1s; transform: rotate(2deg) translateY(-2px);"></div>
+          <div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-indigo-800 rounded-lg shadow-2xl animate-shuffle" style="animation-delay: 0.2s; transform: rotate(4deg) translateY(-4px);"></div>
+          <div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-indigo-800 rounded-lg shadow-2xl animate-shuffle" style="animation-delay: 0.3s; transform: rotate(6deg) translateY(-6px);"></div>
+          <div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-indigo-800 rounded-lg shadow-2xl animate-shuffle" style="animation-delay: 0.4s; transform: rotate(8deg) translateY(-8px);"></div>
+        </div>
+      </div>
+
+      <div class="mb-8">
+        <p class="text-amber-200/70 mb-2">Focus on your question:</p>
+        <p class="text-xl text-white italic">"What do I need to know about my career?"</p>
+      </div>
+
+      <div class="mb-4">
+        <div class="flex items-center justify-center gap-2 mb-2">
+          <svg class="w-5 h-5 text-yellow-300 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+          <span class="text-white">Drawing cards... 7/10</span>
+        </div>
+        <div class="w-full bg-black/50 rounded-full h-2">
+          <div class="bg-gradient-to-r from-amber-600 via-orange-500 to-rose-600 h-2 rounded-full transition-all duration-500" style="width: 70%;"></div>
+        </div>
+      </div>
+
+      <button type="button" onclick="goTo('cards')" class="text-amber-200/70 hover:text-white text-sm bg-transparent border-0 cursor-pointer">
+        Skip Animation →
+      </button>
+    </div>
+  </div>
+
+  <!-- Stage: Cards -->
+  <div id="stage-cards" class="max-w-6xl mx-auto space-y-6" style="display: none;">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div>
+        <h2 class="text-3xl font-bold text-white mb-2">Your Reading</h2>
+        <p class="text-amber-200/70">Celtic Cross - Practical Framework</p>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" class="text-amber-200/70 hover:text-white flex items-center gap-2 bg-transparent border-0 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Ask Questions
+        </button>
+        <button type="button" class="text-amber-200/70 hover:text-white bg-transparent border-0 cursor-pointer">Save Reading</button>
+      </div>
+    </div>
+
+    <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-4">
+      <p class="text-amber-200/70 text-sm mb-1">Your Question:</p>
+      <p class="text-white text-lg">"What do I need to know about my career?"</p>
+    </div>
+
+    <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6">
+      <h3 class="text-2xl font-bold text-white mb-4">Reading Overview</h3>
+      <div class="space-y-4">
+        <p class="text-amber-100/80 leading-relaxed">
+          This reading reveals a period of transformation in your professional life. The cards suggest you're at a crossroads between security and passion, with The Fool indicating new beginnings on the horizon...
+        </p>
+        <div class="p-4 bg-amber-600/20 rounded-lg">
+          <p class="text-white font-semibold mb-2">Overall Theme</p>
+          <p class="text-amber-100/80">Courageous Transformation & New Beginnings</p>
+        </div>
+        <button type="button" onclick="goTo('interpretation')" class="w-full py-3 border border-amber-500/40 rounded-lg text-white hover:bg-black/40 bg-transparent cursor-pointer">
+          Read Full Interpretation
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-black/40 backdrop-blur border border-amber-500/40 rounded-xl p-6">
+      <h3 class="text-xl font-bold text-white mb-4">Your Cards</h3>
+      <p class="text-amber-200/70 text-sm mb-6">Click any card to see its detailed meaning</p>
+      <div class="flex justify-center gap-4 mb-6 flex-wrap">
+        <div class="w-24 h-36 bg-gradient-to-br from-yellow-400 via-purple-500 to-pink-500 rounded-lg shadow-2xl cursor-pointer hover:scale-105 transition-all flex flex-col items-center justify-center p-2">
+          <svg class="text-white mb-1 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+          <p class="text-white font-bold text-center text-xs">The Fool</p>
+        </div>
+        <div class="w-24 h-36 bg-gradient-to-br from-yellow-400 via-purple-500 to-pink-500 rounded-lg shadow-2xl cursor-pointer hover:scale-105 transition-all flex flex-col items-center justify-center p-2">
+          <svg class="text-white mb-1 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+          <p class="text-white font-bold text-center text-xs">Three Swords</p>
+        </div>
+        <div class="w-24 h-36 bg-gradient-to-br from-yellow-400 via-purple-500 to-pink-500 rounded-lg shadow-2xl cursor-pointer hover:scale-105 transition-all flex flex-col items-center justify-center p-2">
+          <svg class="text-white mb-1 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+          <p class="text-white font-bold text-center text-xs">Six Wands</p>
+        </div>
+        <div class="w-24 h-36 bg-gradient-to-br from-yellow-400 via-purple-500 to-pink-500 rounded-lg shadow-2xl cursor-pointer hover:scale-105 transition-all flex flex-col items-center justify-center p-2">
+          <svg class="text-white mb-1 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+          <p class="text-white font-bold text-center text-xs">Nine Pentacles</p>
+        </div>
+        <div class="w-24 h-36 bg-gradient-to-br from-yellow-400 via-purple-500 to-pink-500 rounded-lg shadow-2xl cursor-pointer hover:scale-105 transition-all flex flex-col items-center justify-center p-2">
+          <svg class="text-white mb-1 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+          <p class="text-white font-bold text-center text-xs">The Moon</p>
+        </div>
+        <div class="w-24 h-36 bg-gradient-to-br from-yellow-400 via-purple-500 to-pink-500 rounded-lg shadow-2xl cursor-pointer hover:scale-105 transition-all flex flex-col items-center justify-center p-2">
+          <svg class="text-white mb-1 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+          <p class="text-white font-bold text-center text-xs">Knight Cups</p>
+        </div>
+        <div class="w-24 h-36 bg-gradient-to-br from-yellow-400 via-purple-500 to-pink-500 rounded-lg shadow-2xl cursor-pointer hover:scale-105 transition-all flex flex-col items-center justify-center p-2">
+          <svg class="text-white mb-1 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+          <p class="text-white font-bold text-center text-xs">Queen Wands</p>
+        </div>
+        <div class="w-24 h-36 bg-gradient-to-br from-yellow-400 via-purple-500 to-pink-500 rounded-lg shadow-2xl cursor-pointer hover:scale-105 transition-all flex flex-col items-center justify-center p-2">
+          <svg class="text-white mb-1 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+          <p class="text-white font-bold text-center text-xs">Ace Cups</p>
+        </div>
+        <div class="w-24 h-36 bg-gradient-to-br from-yellow-400 via-purple-500 to-pink-500 rounded-lg shadow-2xl cursor-pointer hover:scale-105 transition-all flex flex-col items-center justify-center p-2">
+          <svg class="text-white mb-1 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+          <p class="text-white font-bold text-center text-xs">Ten Pentacles</p>
+        </div>
+        <div class="w-24 h-36 bg-gradient-to-br from-yellow-400 via-purple-500 to-pink-500 rounded-lg shadow-2xl cursor-pointer hover:scale-105 transition-all flex flex-col items-center justify-center p-2">
+          <svg class="text-white mb-1 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon stroke-width="2" points="12 2 15 9 22 9 17 14 18 22 12 18 6 22 7 14 2 9 9 9"/></svg>
+          <p class="text-white font-bold text-center text-xs">The World</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-4 flex-wrap">
+      <button type="button" onclick="goTo('interpretation')" class="flex-1 min-w-[200px] py-6 bg-gradient-to-r from-amber-600 via-orange-500 to-rose-600 hover:from-purple-600 hover:to-pink-600 rounded-lg font-semibold text-white">
+        Read Full Interpretation
+      </button>
+      <button type="button" onclick="goTo('chat')" class="flex-1 min-w-[200px] py-6 border border-amber-500/40 rounded-lg text-white hover:bg-black/40 bg-transparent flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Ask Questions
+      </button>
+    </div>
+  </div>
+
+  <!-- Stage: Interpretation (placeholder) -->
+  <div id="stage-interpretation" class="max-w-3xl mx-auto text-center py-12" style="display: none;">
+    <h2 class="text-3xl font-bold text-white mb-4">Full Interpretation</h2>
+    <p class="text-amber-200/70 mb-6">Interpretation stage (see full file for full content)</p>
+    <button type="button" onclick="goTo('cards')" class="text-amber-200/70 hover:text-white bg-transparent border-0 cursor-pointer">Back to Cards</button>
+  </div>
+
+  <!-- Stage: Chat (placeholder) -->
+  <div id="stage-chat" class="max-w-3xl mx-auto text-center py-12" style="display: none;">
+    <h2 class="text-3xl font-bold text-white mb-4">AI Chat</h2>
+    <p class="text-amber-200/70 mb-6">Chat stage (see full file for full content)</p>
+    <button type="button" onclick="goTo('cards')" class="text-amber-200/70 hover:text-white bg-transparent border-0 cursor-pointer">Back to Reading</button>
+  </div>
+
+  <!-- Footer -->
+  <div id="stage-footer" class="mt-16 text-center text-amber-300/80 text-sm">
+    <p>Powered by RAG-enhanced AI - Traditional tarot wisdom</p>
+  </div>
+  </div>
+
+  <script>
+    // Re-run render on load in case DOM order matters
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', render);
+    } else {
+      render();
+    }
+  </script>
+</body>
+</html>
