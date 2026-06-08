@@ -1,190 +1,225 @@
+/**
+ * RAG Tools
+ * Tools for retrieving context from the knowledge base
+ */
+
+import { Tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import {
-  QueryCardMeaningsInputSchema,
-  QueryCardCombinationsInputSchema,
-  QueryArchetypesInputSchema,
-  QueryMythsInputSchema,
-  QuerySymbolsInputSchema,
-  zodToFunctionParameters,
-} from './schemas';
-import { queryVectorStore } from '@/lib/rag/retrieval';
-import { AgentState } from '@/types/agent.types';
+  retrieveCardMeanings,
+  retrieveCombinations,
+  retrieveFramework,
+  retrieveMythsByTheme,
+  retrieveSpread,
+  retrieveContextual,
+} from '@/backend/lib/rag/retrieval';
+import { RAGContext, RAGSource, GatherContextInput, GatherContextOutput } from '../core/types';
 
 // ============================================================================
-// TOOL INTERFACE
+// GATHER CONTEXT TOOL
 // ============================================================================
 
-export interface Tool {
-  name: string;
-  description: string;
-  parameters: any; // OpenAI function parameters format
-  execute: (input: any, state: AgentState) => Promise<any>;
+const GatherContextSchema = z.object({
+  sessionId: z.string(),
+  cards: z.array(z.string()),
+  question: z.string(),
+  framework: z.string(),
+  spreadType: z.string(),
+});
+
+export class GatherContextTool extends Tool {
+  name = 'gather_context';
+  description = 'Gather comprehensive RAG context for tarot reading interpretation';
+  schema = GatherContextSchema;
+
+  async _call(input: GatherContextInput): Promise<string> {
+    try {
+      const context = await gatherFullContext(input);
+
+      return JSON.stringify({
+        success: true,
+        sourceCount: context.sourceCount,
+        context: context.ragContext,
+      });
+    } catch (error) {
+      console.error('GatherContextTool error:', error);
+      return JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+}
+
+/**
+ * Gather full RAG context
+ */
+export async function gatherFullContext(
+  input: GatherContextInput
+): Promise<GatherContextOutput> {
+  const { cards, question, framework, spreadType } = input;
+
+  const ragContext: RAGContext = {
+    cardMeanings: new Map(),
+    combinations: [],
+    spreadContext: [],
+    frameworkGuidance: [],
+    mythologicalContext: [],
+    totalSources: 0,
+  };
+
+  try {
+    // 1. Card meanings for each card
+    for (const card of cards) {
+      const meanings = await retrieveCardMeanings({
+        cardNames: [card],
+        framework: framework as any,
+        topK: 5,
+        rerank: true,
+      });
+
+      ragContext.cardMeanings.set(
+        card,
+        meanings.map((r) => convertToRAGSource(r))
+      );
+      ragContext.totalSources += meanings.length;
+    }
+
+    // 2. Card combinations
+    if (cards.length >= 2) {
+      // Two-card combinations
+      for (let i = 0; i < cards.length - 1; i++) {
+        const pair = [cards[i], cards[i + 1]];
+        const combos = await retrieveCombinations({
+          cards: pair,
+          context: question,
+          topK: 2,
+          rerank: true,
+        });
+
+        ragContext.combinations.push(...combos.map(convertToRAGSource));
+        ragContext.totalSources += combos.length;
+      }
+
+      // Three-card pattern if exactly 3 cards
+      if (cards.length === 3) {
+        const pattern = await retrieveCombinations({
+          cards,
+          context: question,
+          topK: 2,
+        });
+
+        ragContext.combinations.push(...pattern.map(convertToRAGSource));
+        ragContext.totalSources += pattern.length;
+      }
+    }
+
+    // 3. Spread-specific context
+    if (spreadType && spreadType !== 'general') {
+      const spreadResults = await retrieveSpread({
+        spreadName: spreadType,
+        purpose: question,
+        topK: 2,
+      });
+
+      ragContext.spreadContext = spreadResults.map(convertToRAGSource);
+      ragContext.totalSources += spreadResults.length;
+    }
+
+    // 4. Framework guidance
+    const frameworkResults = await retrieveFramework({
+      framework: framework as any,
+      topic: question,
+      topK: 3,
+    });
+
+    ragContext.frameworkGuidance = frameworkResults.map(convertToRAGSource);
+    ragContext.totalSources += frameworkResults.length;
+
+    // 5. Mythological context
+    const mythResults = await retrieveMythsByTheme({
+      theme: question,
+      relatedCards: cards,
+      topK: 3,
+      rerank: true,
+    });
+
+    ragContext.mythologicalContext = mythResults.map(convertToRAGSource);
+    ragContext.totalSources += mythResults.length;
+
+    return {
+      ragContext,
+      sourceCount: ragContext.totalSources,
+    };
+  } catch (error) {
+    console.error('Error gathering RAG context:', error);
+    throw error;
+  }
 }
 
 // ============================================================================
-// RAG TOOLS
+// QUERY SPECIFIC CONTEXT TOOL
 // ============================================================================
 
-export const queryCardMeaningsTool: Tool = {
-  name: 'query_card_meanings',
-  description: 'Retrieve traditional and esoteric meanings for specific tarot cards. Use this when you need detailed interpretations of individual cards.',
-  parameters: zodToFunctionParameters(QueryCardMeaningsInputSchema),
+const QueryContextSchema = z.object({
+  query: z.string(),
+  cards: z.array(z.string()),
+  framework: z.string(),
+  topK: z.number().optional(),
+});
 
-  execute: async (input, state) => {
-    const validated = QueryCardMeaningsInputSchema.parse(input);
+export class QueryContextTool extends Tool {
+  name = 'query_context';
+  description = 'Query specific context from the knowledge base during conversation';
+  schema = QueryContextSchema;
 
-    const results = await queryVectorStore({
-      query: validated.cardNames.join(' '),
-      filter: {
-        type: 'card',
-        cardName: { $in: validated.cardNames },
-      },
-      topK: validated.cardNames.length * 2, // Upright + reversed for each
-    });
+  async _call(input: z.infer<typeof QueryContextSchema>): Promise<string> {
+    try {
+      const { query, cards, framework, topK = 5 } = input;
 
-    return {
-      success: true,
-      cardMeanings: results.map(r => ({
-        card: r.metadata.cardName,
-        position: r.metadata.position,
-        content: r.content,
-        keywords: r.metadata.keywords,
-        score: r.score,
-      })),
-    };
-  },
-};
+      const results = await retrieveContextual({
+        query,
+        readingContext: {
+          previousCards: cards,
+          framework,
+        },
+        topK,
+      });
 
-export const queryCardCombinationsTool: Tool = {
-  name: 'query_card_combinations',
-  description: 'Find interpretations for specific card pairs or triplets. Use this when multiple cards appear together and you need to understand their combined meaning.',
-  parameters: zodToFunctionParameters(QueryCardCombinationsInputSchema),
+      const sources = results.map(convertToRAGSource);
 
-  execute: async (input, state) => {
-    const validated = QueryCardCombinationsInputSchema.parse(input);
-
-    // Try exact combination first
-    const exactQuery = validated.cards.join(' ');
-    const exactResults = await queryVectorStore({
-      query: exactQuery,
-      filter: {
-        type: 'combination',
-        cards: { $all: validated.cards },
-      },
-      topK: 3,
-    });
-
-    if (exactResults.length > 0) {
-      return {
+      return JSON.stringify({
         success: true,
-        combinations: exactResults,
-        type: 'exact_match',
-      };
+        sources,
+        count: sources.length,
+      });
+    } catch (error) {
+      console.error('QueryContextTool error:', error);
+      return JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
-
-    // Fall back to similar combinations
-    const similarResults = await queryVectorStore({
-      query: `${exactQuery} ${validated.context || ''}`,
-      filter: {
-        type: 'combination',
-      },
-      topK: 5,
-    });
-
-    return {
-      success: true,
-      combinations: similarResults,
-      type: 'similar_match',
-    };
-  },
-};
-
-export const queryArchetypesTool: Tool = {
-  name: 'query_archetypes',
-  description: "Find archetypal patterns matching the reading theme. Use this to connect the reading to universal human experiences and the hero's journey.",
-  parameters: zodToFunctionParameters(QueryArchetypesInputSchema),
-
-  execute: async (input, state) => {
-    const validated = QueryArchetypesInputSchema.parse(input);
-
-    const cardKeywords = validated.cards ? validated.cards.join(' ') : '';
-    const query = `${validated.theme} ${cardKeywords}`;
-
-    const results = await queryVectorStore({
-      query,
-      filter: {
-        type: 'archetype',
-      },
-      topK: 3,
-    });
-
-    return {
-      success: true,
-      archetypes: results,
-    };
-  },
-};
-
-export const queryMythsTool: Tool = {
-  name: 'query_myths',
-  description: 'Retrieve relevant myths and stories based on the reading. Use this to provide narrative context and help the user see their situation through the lens of universal stories.',
-  parameters: zodToFunctionParameters(QueryMythsInputSchema),
-
-  execute: async (input, state) => {
-    const validated = QueryMythsInputSchema.parse(input);
-
-    const query = validated.archetype
-      ? `${validated.archetype} ${validated.situation}`
-      : validated.situation;
-
-    const results = await queryVectorStore({
-      query,
-      filter: {
-        type: 'myth',
-      },
-      topK: 5,
-    });
-
-    return {
-      success: true,
-      myths: results,
-    };
-  },
-};
-
-export const querySymbolsTool: Tool = {
-  name: 'query_symbols',
-  description: 'Find symbolic meanings relevant to the reading (colors, animals, objects). Use this to deepen interpretation with symbolic analysis.',
-  parameters: zodToFunctionParameters(QuerySymbolsInputSchema),
-
-  execute: async (input, state) => {
-    const validated = QuerySymbolsInputSchema.parse(input);
-
-    const query = `${validated.symbols.join(' ')} ${validated.context || ''}`;
-
-    const results = await queryVectorStore({
-      query,
-      filter: {
-        type: 'symbol',
-      },
-      topK: validated.symbols.length * 2,
-    });
-
-    return {
-      success: true,
-      symbols: results,
-    };
-  },
-};
+  }
+}
 
 // ============================================================================
-// EXPORT ALL RAG TOOLS
+// HELPER FUNCTIONS
 // ============================================================================
 
-export const RAG_TOOLS: Tool[] = [
-  queryCardMeaningsTool,
-  queryCardCombinationsTool,
-  queryArchetypesTool,
-  queryMythsTool,
-  querySymbolsTool,
-];
+function convertToRAGSource(queryResult: any): RAGSource {
+  return {
+    id: queryResult.id,
+    type: queryResult.metadata.type || 'unknown',
+    title: queryResult.metadata.title || queryResult.metadata.cardName || 'Unknown',
+    content: queryResult.content,
+    score: queryResult.score,
+    metadata: queryResult.metadata,
+  };
+}
+
+// ============================================================================
+// EXPORT ALL TOOLS
+// ============================================================================
+
+export const RAG_TOOLS = [new GatherContextTool(), new QueryContextTool()];

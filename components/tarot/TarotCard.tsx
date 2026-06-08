@@ -45,7 +45,7 @@ export default function TarotCard({
     >
       {(isActive || isHovered) && (
         <div 
-          className="absolute inset-0 blur-3xl opacity-60 rounded-2xl animate-pulse"
+          className="absolute inset-0 blur-3xl opacity-60 rounded-2xl animate-pulse pointer-events-none"
           style={{
             background: `radial-gradient(circle, ${reading.glowColor} 0%, transparent 70%)`,
             transform: 'scale(1.4)',
@@ -125,13 +125,13 @@ export default function TarotCard({
           </div>
         ))}
 
-        <div className={`absolute inset-0 bg-gradient-to-br ${reading.color} opacity-0 transition-opacity duration-500 ${isHovered || isActive ? 'opacity-10' : ''} mix-blend-overlay`} />
+        <div className={`absolute inset-0 bg-gradient-to-br ${reading.color} opacity-0 transition-opacity duration-500 ${isHovered || isActive ? 'opacity-10' : ''} mix-blend-overlay pointer-events-none`} />
       </div>
 
       {isHovered && (
         <>
-          <Star className="absolute -top-4 -right-4 w-5 h-5 text-amber-600/70 animate-ping" fill="currentColor" />
-          <Sparkles className="absolute -bottom-4 -left-4 w-5 h-5 text-amber-600/70 animate-pulse" />
+          <Star className="absolute -top-4 -right-4 w-5 h-5 text-amber-600/70 animate-ping pointer-events-none" fill="currentColor" />
+          <Sparkles className="absolute -bottom-4 -left-4 w-5 h-5 text-amber-600/70 animate-pulse pointer-events-none" />
         </>
       )}
     </div>
